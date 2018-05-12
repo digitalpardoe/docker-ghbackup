@@ -9,8 +9,6 @@ RUN chmod +x /usr/local/bin/ghbackup.sh && \
     rm -R /go/src/github.com && \
     ghbackup -version
 
-RUN echo '0 * * * * /usr/local/bin/ghbackup.sh'
+RUN echo '0 * * * * /usr/local/bin/ghbackup.sh' > /etc/crontabs/root
 
-RUN touch /var/log/cron.log
-
-CMD cron && tail -f /var/log/cron.log
+CMD ["/usr/sbin/crond", "-f", "-d", "0"]
