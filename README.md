@@ -1,9 +1,6 @@
-# docker-ghbackup
+This is an image based on https://github.com/qvl/ghbackup with a bit of cron sprinkled in for good measure.
 
-A docker version of https://github.com/qvl/ghbackup.
-
-Performs hourly backups of all
-the GitHub repositories you have access to, it automatically downloads any new repositories and updates any existing ones.
+It performs hourly backups of all the GitHub repositories you have access to, automatically downloading any new repositories and updating any existing ones.
 
 You can generate a personal access token here [ https://github.com/settings/tokens](https://github.com/settings/tokens).
 
@@ -16,6 +13,7 @@ docker create \
   -e GITHUB_SECRET=<GITHUB_SECRET> \
   digitalpardoe/ghbackup
 ```
+
 ## Parameters
 
 * `-v /ghbackup` - folder to store the GitHub backups
