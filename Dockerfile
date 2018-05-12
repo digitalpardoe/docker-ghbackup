@@ -1,12 +1,16 @@
 FROM golang:alpine
 
-COPY entrypoint.sh /entrypoint.sh
+COPY ghbackup.sh /usr/local/bin/ghbackup.sh
 
-RUN chmod +x /entrypoint.sh && \
+RUN chmod +x /usr/local/bin/ghbackup.sh && \
     apk add --no-cache git && \
     go get github.com/qvl/ghbackup && \
     go build -o /usr/bin/ghbackup github.com/qvl/ghbackup && \
     rm -R /go/src/github.com && \
     ghbackup -version
 
-ENTRYPOINT ["/entrypoint.sh"]
+RUN echo '0 * * * * /usr/local/bin/ghbackup.sh'
+
+RUN touch /var/log/cron.log
+
+CMD cron && tail -f /var/log/cron.log

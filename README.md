@@ -1,13 +1,9 @@
 # docker-ghbackup
-[dockerstore]: https://hub.docker.com/r/schnorchersepp/docker-ghbackup/
-
-[![Docker Build Status](https://img.shields.io/docker/build/schnorchersepp/docker-ghbackup.svg)][dockerstore]
-[![Docker Pulls](https://img.shields.io/docker/pulls/schnorchersepp/docker-ghbackup.svg)][dockerstore]
-
+[dockerstore]: https://hub.docker.com/r/digitalpardoe/ghbackup/
 
 Docker version of https://github.com/qvl/ghbackup
 
 #### Usage
 ```
-docker run -v /backup/folder/on/host:/ghbackup schnorchersepp/docker-ghbackup github-user-name
+docker run -v /backup/folder:/ghbackup -e GITHUB_USER=username -e GITHUB_SECRET=password_or_token digitalpardoe/ghbackup
 ```
