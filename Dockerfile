@@ -11,4 +11,4 @@ RUN chmod +x /usr/local/bin/ghbackup.sh && \
 
 RUN echo '0 * * * * /usr/local/bin/ghbackup.sh' > /etc/crontabs/root
 
-CMD ["/usr/sbin/crond", "-f", "-d", "0"]
+CMD ["/usr/sbin/crond", "-f"]
