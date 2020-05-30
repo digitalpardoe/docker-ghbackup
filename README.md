@@ -4,10 +4,12 @@ It performs hourly backups of all the GitHub repositories you have access to (it
 
 You can generate a personal access token here [ https://github.com/settings/tokens](https://github.com/settings/tokens).
 
+This image isn't interactive, you won't see much, if any, output when it runs.
+
 ## Usage
 
 ```
-docker create \
+docker run \
   -v </path/to/backup/folder>:/ghbackup \
   -e GITHUB_SECRET=<GITHUB_SECRET> \
   digitalpardoe/ghbackup
