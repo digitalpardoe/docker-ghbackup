@@ -12,3 +12,5 @@ COPY ["ghbackup.rb", "/usr/local/bin/ghbackup"]
 RUN echo '0 0,4,8,12,16,20 * * * /usr/local/bin/ghbackup' > /etc/crontabs/root
 
 CMD ["/usr/sbin/crond", "-f"]
+
+LABEL org.opencontainers.image.source https://github.com/digitalpardoe/docker-ghbackup
