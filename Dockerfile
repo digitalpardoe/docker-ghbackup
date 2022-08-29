@@ -1,6 +1,6 @@
 FROM alpine:3.12
 
-RUN apk add --no-cache ruby ruby-json git
+RUN apk add --no-cache ruby ruby-json git git-lfs
 RUN gem install octokit
 
 ENV GITHUB_SECRET=""
