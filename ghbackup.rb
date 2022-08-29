@@ -34,9 +34,13 @@ begin
     if Dir.exist?(backup_path)
       Dir.chdir(backup_path) {
         system('git', 'remote', 'update')
+        system('git', 'lfs', 'fetch', '--all')
       }
     else
       system('git', 'clone', '--mirror', '--no-checkout', '--progress', authenitcated_clone_url, backup_path)
+      Dir.chdir(backup_path) {
+        system('git', 'lfs', 'fetch', '--all')
+      }
     end
   end
 ensure
