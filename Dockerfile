@@ -1,16 +1,14 @@
-FROM alpine:3.12
+FROM alpine:3.16
 
 RUN apk add --no-cache ruby ruby-json git git-lfs
-RUN gem install octokit
+RUN gem install octokit faraday-retry
 
 ENV GITHUB_SECRET=""
 
 VOLUME ["/ghbackup"]
 
 COPY ["ghbackup.rb", "/usr/local/bin/ghbackup"]
-  
-RUN echo '0 0,4,8,12,16,20 * * * /usr/local/bin/ghbackup' > /etc/crontabs/root
 
-CMD ["/usr/sbin/crond", "-f"]
+ENTRYPOINT ["/usr/local/bin/ghbackup"]
 
 LABEL org.opencontainers.image.source https://github.com/digitalpardoe/docker-ghbackup
