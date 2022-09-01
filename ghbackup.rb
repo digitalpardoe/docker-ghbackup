@@ -3,7 +3,7 @@
 require 'octokit'
 require 'uri'
 
-interval = ENV["interval"].to_i || 3600
+interval = ENV["INTERVAL"].to_i || 3600
 
 puts "Starting ghbackup..."
 puts "Running as user #{Process.uid} and group #{Process.gid}."
