@@ -6,6 +6,7 @@ You can generate a personal access token here [ https://github.com/settings/toke
 
 ```
 docker run \
+  --restart unless-stopped \
   -v </path/to/backup/folder>:/ghbackup \
   -e GITHUB_SECRET=<GITHUB_SECRET> \
   digitalpardoe/ghbackup
