@@ -3,12 +3,7 @@
 require 'octokit'
 require 'uri'
 
-interval = ENV["INTERVAL"].to_i || 3600
-
 puts "Starting ghbackup..."
-puts "Running as user #{Process.uid} and group #{Process.gid}."
-
-sleep interval
 
 begin
   Octokit.configure do |c|
@@ -25,23 +20,31 @@ begin
   client.repos.each do |repo|
     uri = URI.parse(repo[:clone_url])
     authenitcated_clone_url = "#{uri.scheme}://#{login}:#{github_secret}@#{uri.host}#{uri.path}"
-    
+    unauthenticated_clone_url = "#{uri.scheme}://#{uri.host}#{uri.path}"
+
     backup_path = "#{backup_folder}/#{repo[:full_name]}.git"
 
-    p "Backing up #{repo[:full_name]}..."
+    puts "\nBacking up #{repo[:full_name]}..."
+
+    system('git', 'config', '--global', '--add', 'safe.directory', '*')
 
     if Dir.exist?(backup_path)
       Dir.chdir(backup_path) {
+        system('git', 'remote', 'set-url', 'origin', authenitcated_clone_url)
         system('git', 'remote', 'update')
         system('git', 'lfs', 'fetch', '--all')
+        system('git', 'remote', 'set-url', 'origin', unauthenticated_clone_url)
       }
     else
       system('git', 'clone', '--mirror', '--no-checkout', '--progress', authenitcated_clone_url, backup_path)
       Dir.chdir(backup_path) {
         system('git', 'lfs', 'fetch', '--all')
       }
+      system('git', 'remote', 'set-url', 'origin', unauthenticated_clone_url)
     end
   end
+
+  puts "\nBackup complete!"
 rescue => e
   puts "Error: #{e}"
 end
