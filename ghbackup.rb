@@ -39,8 +39,8 @@ begin
       system('git', 'clone', '--mirror', '--no-checkout', '--progress', authenitcated_clone_url, backup_path)
       Dir.chdir(backup_path) {
         system('git', 'lfs', 'fetch', '--all')
+        system('git', 'remote', 'set-url', 'origin', unauthenticated_clone_url)
       }
-      system('git', 'remote', 'set-url', 'origin', unauthenticated_clone_url)
     end
   end
 
