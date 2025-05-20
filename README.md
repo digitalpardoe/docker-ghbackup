@@ -1,5 +1,7 @@
 Performs regular backups of all the GitHub repositories you have access to (it'll exclude organisations it doesn't have specific permission to access), automatically downloading any new repositories and updating any existing ones.
 
+This application is written in Golang.
+
 You can generate a personal access token here [https://github.com/settings/tokens](https://github.com/settings/tokens).
 
 ## Usage
