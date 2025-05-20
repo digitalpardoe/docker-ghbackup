@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/go-github/v62/github"
 )
@@ -40,7 +41,7 @@ func (m *mockGhClient) ListUserRepositories(ctx context.Context, user string, op
 type mockCmdRunner struct {
 	RunFunc          func(dir string, name string, args ...string) ([]byte, error)
 	RunAndOutputFunc func(dir string, name string, args ...string) error
-	executedCmds     []string // To store executed commands for verification
+	executedCmds     []string   // To store executed commands for verification
 	commandDetails   []struct { // To store more details about executed commands
 		Dir  string
 		Name string
@@ -115,19 +116,23 @@ func (mcr *mockCmdRunner) findCommand(name string, argsPrefix ...string) bool {
 	return false
 }
 
-
 // --- Mocks for Filesystem Operations ---
 type mockFileInfo struct {
-	name string
+	name  string
 	isDir bool
 }
-func (mfi *mockFileInfo) Name() string { return mfi.name }
-func (mfi *mockFileInfo) Size() int64 { return 0 }
-func (mfi *mockFileInfo) Mode() os.FileMode { if mfi.isDir { return os.ModeDir } ; return 0 }
-func (mfi *mockFileInfo) ModTime() time.Time { return time.Now() }
-func (mfi *mockFileInfo) IsDir() bool { return mfi.isDir }
-func (mfi *mockFileInfo) Sys() interface{} { return nil }
 
+func (mfi *mockFileInfo) Name() string { return mfi.name }
+func (mfi *mockFileInfo) Size() int64  { return 0 }
+func (mfi *mockFileInfo) Mode() os.FileMode {
+	if mfi.isDir {
+		return os.ModeDir
+	}
+	return 0
+}
+func (mfi *mockFileInfo) ModTime() time.Time { return time.Now() }
+func (mfi *mockFileInfo) IsDir() bool        { return mfi.isDir }
+func (mfi *mockFileInfo) Sys() interface{}   { return nil }
 
 var mockFilesystem = make(map[string]*mockFileInfo)
 var mockMkdirAllPaths []string
@@ -159,14 +164,13 @@ func mockChdir(dir string) error {
 			break
 		}
 	}
-    // Also check if it's the backup folder itself, which might be created by MkdirAll
-    for _, p := range mockMkdirAllPaths {
-        if p == dir {
-            exists = true
-            break
-        }
-    }
-
+	// Also check if it's the backup folder itself, which might be created by MkdirAll
+	for _, p := range mockMkdirAllPaths {
+		if p == dir {
+			exists = true
+			break
+		}
+	}
 
 	if !exists && dir != "/" && dir != "." && !strings.HasPrefix(dir, "/tmp/") { // Allow /tmp for t.TempDir()
 		// A more sophisticated mock would check if 'dir' is a valid path based on mockFilesystem
@@ -183,7 +187,6 @@ func resetMocks() {
 	mockMkdirAllPaths = []string{}
 	mockCurrentDir = "/app" // Reset to a sensible default
 }
-
 
 // --- Test Cases ---
 
@@ -227,7 +230,6 @@ func TestEnvVarParsing(t *testing.T) {
 		}
 	})
 }
-
 
 func TestAppRun_ClonePath(t *testing.T) {
 	resetMocks()
@@ -281,13 +283,16 @@ func TestAppRun_ClonePath(t *testing.T) {
 		t.Errorf("Expected MkdirAll to be called for %s", tempBackupDir)
 	}
 
-
 	// Check git commands
 	expectedRepoPath := filepath.Join(tempBackupDir, repo1FullName+".git")
 	authenticatedCloneURL := fmt.Sprintf("https://%s:%s@github.com/%s.git", username, app.GithubToken, repo1FullName)
 	unauthenticatedCloneURL := fmt.Sprintf("https://github.com/%s.git", repo1FullName)
 
-	expectedCommands := []struct{Dir string; Name string; Args []string} {
+	expectedCommands := []struct {
+		Dir  string
+		Name string
+		Args []string
+	}{
 		{"", "git", []string{"config", "--global", "--add", "safe.directory", "*"}},
 		{"", "git", []string{"clone", "--mirror", "--no-checkout", "--progress", authenticatedCloneURL, expectedRepoPath}},
 		{expectedRepoPath, "git", []string{"lfs", "fetch", "--all"}},
@@ -322,7 +327,7 @@ func TestAppRun_UpdatePath(t *testing.T) {
 	expectedRepoPath := filepath.Join(tempBackupDir, repo1FullName+".git")
 
 	// Simulate existing backup by adding it to our mock filesystem
-	mockFilesystem[expectedRepoPath] = &mockFileInfo{name: repo1FullName+".git", isDir: true}
+	mockFilesystem[expectedRepoPath] = &mockFileInfo{name: repo1FullName + ".git", isDir: true}
 
 	app := App{
 		GithubToken:  "test-token",
@@ -357,14 +362,18 @@ func TestAppRun_UpdatePath(t *testing.T) {
 	authenticatedCloneURL := fmt.Sprintf("https://%s:%s@github.com/%s.git", username, app.GithubToken, repo1FullName)
 	unauthenticatedCloneURL := fmt.Sprintf("https://github.com/%s.git", repo1FullName)
 
-	expectedCommands := []struct{Dir string; Name string; Args []string} {
+	expectedCommands := []struct {
+		Dir  string
+		Name string
+		Args []string
+	}{
 		{"", "git", []string{"config", "--global", "--add", "safe.directory", "*"}},
 		{expectedRepoPath, "git", []string{"remote", "set-url", "origin", authenticatedCloneURL}},
 		{expectedRepoPath, "git", []string{"remote", "update"}},
 		{expectedRepoPath, "git", []string{"lfs", "fetch", "--all"}},
 		{expectedRepoPath, "git", []string{"remote", "set-url", "origin", unauthenticatedCloneURL}},
 	}
-    if len(mockCmd.commandDetails) != len(expectedCommands) {
+	if len(mockCmd.commandDetails) != len(expectedCommands) {
 		t.Errorf("Expected %d git commands for update, got %d. Executed: %v", len(expectedCommands), len(mockCmd.commandDetails), mockCmd.executedCmds)
 	}
 	for i, expCmd := range expectedCommands {
@@ -379,7 +388,6 @@ func TestAppRun_UpdatePath(t *testing.T) {
 		}
 	}
 }
-
 
 func TestAppRun_GitHubUserError(t *testing.T) {
 	resetMocks()
@@ -402,9 +410,8 @@ func TestAppRun_GitHubUserError(t *testing.T) {
 	mockGh.GetAuthenticatedUserFunc = func(ctx context.Context) (*github.User, error) {
 		return nil, errors.New(expectedError)
 	}
-    // Mock git config to succeed
-    mockCmd.RunFunc = func(dir, name string, args ...string) ([]byte, error) { return []byte{}, nil }
-
+	// Mock git config to succeed
+	mockCmd.RunFunc = func(dir, name string, args ...string) ([]byte, error) { return []byte{}, nil }
 
 	err := app.runApp(ctx)
 	if err == nil {
@@ -440,8 +447,7 @@ func TestAppRun_GitHubListReposError(t *testing.T) {
 	mockGh.ListUserRepositoriesFunc = func(ctx context.Context, user string, opts *github.RepositoryListOptions) ([]*github.Repository, *github.Response, error) {
 		return nil, nil, errors.New(expectedError)
 	}
-    mockCmd.RunFunc = func(dir, name string, args ...string) ([]byte, error) { return []byte{}, nil }
-
+	mockCmd.RunFunc = func(dir, name string, args ...string) ([]byte, error) { return []byte{}, nil }
 
 	err := app.runApp(ctx)
 	if err == nil {
@@ -486,7 +492,6 @@ func TestAppRun_GitConfigError(t *testing.T) {
 	}
 }
 
-
 func TestAppRun_CloneErrorSkipsRepo(t *testing.T) {
 	resetMocks()
 	ctx := context.Background()
@@ -528,9 +533,8 @@ func TestAppRun_CloneErrorSkipsRepo(t *testing.T) {
 		}
 		return nil // Success for other commands (like LFS for repo2)
 	}
-    // git config and other non-RunAndOutput commands succeed
-    mockCmd.RunFunc = func(dir, name string, args ...string) ([]byte, error) { return []byte{}, nil }
-
+	// git config and other non-RunAndOutput commands succeed
+	mockCmd.RunFunc = func(dir, name string, args ...string) ([]byte, error) { return []byte{}, nil }
 
 	// --- Act ---
 	err := app.runApp(ctx) // This error will be nil if any repo succeeds and errors are logged.
@@ -543,7 +547,7 @@ func TestAppRun_CloneErrorSkipsRepo(t *testing.T) {
 	// The mockCmdRunner.RunAndOutputFunc will only be called for clone, remote update, lfs
 	// We expect clone for repo1 (fails), then clone for repo2 (succeeds in mock)
 	// Then LFS for repo2, then remote set-url for repo2.
-	
+
 	// Check that clone for repo2 was attempted and "succeeded" (mock success)
 	repo2Path := filepath.Join(tempBackupDir, repo2FullName+".git")
 	authenticatedCloneURLRepo2 := fmt.Sprintf("https://%s:%s@github.com/%s.git", username, app.GithubToken, repo2FullName)
@@ -568,7 +572,7 @@ func TestAppRun_CloneErrorSkipsRepo(t *testing.T) {
 	if !foundCloneRepo2 {
 		t.Error("Expected clone attempt for repo2")
 	}
-	
+
 	// Check LFS fetch for repo2 was attempted
 	if !mockCmd.findCommand("git", "lfs", "fetch", "--all") {
 		// This check is a bit broad, better to check with dir
@@ -598,4 +602,3 @@ func TestMain(m *testing.M) {
 // - `os.Getwd`, `os.Chdir` errors (should skip the repo or handle gracefully)
 // - `os.MkdirAll` failure for the main backup folder (should be fatal for runApp)
 // - Pagination in ListUserRepositories
-```
