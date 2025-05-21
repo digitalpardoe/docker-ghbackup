@@ -528,10 +528,13 @@ func TestAppRun_CloneErrorSkipsRepo(t *testing.T) {
 
 	cloneError := errors.New("git clone intentional error")
 	mockCmd.RunAndOutputFunc = func(dir string, name string, args ...string) error {
-		if name == "git" && args[0] == "clone" && strings.Contains(args[3], repo1FullName) {
+		// args for "git clone..." are:
+		// args[0]="clone", args[1]="--mirror", args[2]="--no-checkout",
+		// args[3]="--progress", args[4]=authenticatedCloneURL, args[5]=repoPath
+		if name == "git" && args[0] == "clone" && len(args) > 4 && strings.Contains(args[4], repo1FullName) {
 			return cloneError
 		}
-		return nil // Success for other commands (like LFS for repo2)
+		return nil // Success for other commands
 	}
 	// git config and other non-RunAndOutput commands succeed
 	mockCmd.RunFunc = func(dir, name string, args ...string) ([]byte, error) { return []byte{}, nil }
@@ -550,18 +553,28 @@ func TestAppRun_CloneErrorSkipsRepo(t *testing.T) {
 
 	// Check that clone for repo2 was attempted and "succeeded" (mock success)
 	repo2Path := filepath.Join(tempBackupDir, repo2FullName+".git")
-	authenticatedCloneURLRepo2 := fmt.Sprintf("https://%s:%s@github.com/%s.git", username, app.GithubToken, repo2FullName)
+	// authenticatedCloneURLRepo2 := fmt.Sprintf("https://%s:%s@github.com/%s.git", username, app.GithubToken, repo2FullName)
 
 	foundCloneRepo1 := false
 	foundCloneRepo2 := false
 
-	for _, detail := range mockCmd.commandDetails {
-		if detail.Name == "git" && detail.Args[0] == "clone" {
-			if strings.Contains(detail.Args[3], repo1FullName) {
-				foundCloneRepo1 = true
-			}
-			if strings.Contains(detail.Args[3], repo2FullName) {
-				foundCloneRepo2 = true
+	for i, detail := range mockCmd.commandDetails {
+		t.Logf("Checking command #%d: Dir='%s', Name='%s', Args=%v", i, detail.Dir, detail.Name, detail.Args) // DEBUG LOG
+		if detail.Name == "git" && len(detail.Args) > 0 && detail.Args[0] == "clone" {
+			// Args for clone: args[0]="clone", args[1]="--mirror", args[2]="--no-checkout",
+			// args[3]="--progress", args[4]=authenticatedCloneURL, args[5]=repoPath
+			if len(detail.Args) > 4 { // Ensure Args[4] (URL) exists
+				t.Logf("Found 'git clone' command. URL (detail.Args[4]) = %s", detail.Args[4]) // DEBUG LOG
+				if strings.Contains(detail.Args[4], repo1FullName) {
+					t.Logf("Matched repo1FullName (%s) in URL (%s)", repo1FullName, detail.Args[4]) // DEBUG LOG
+					foundCloneRepo1 = true
+				}
+				if strings.Contains(detail.Args[4], repo2FullName) {
+					t.Logf("Matched repo2FullName (%s) in URL (%s)", repo2FullName, detail.Args[4]) // DEBUG LOG
+					foundCloneRepo2 = true
+				}
+			} else {
+				t.Logf("Found 'git clone' command but len(detail.Args) <= 4. Args: %v", detail.Args)
 			}
 		}
 	}
