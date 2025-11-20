@@ -27,7 +27,9 @@ begin
     puts "\nBacking up #{repo[:full_name]}..."
 
     system('git', 'config', '--global', '--add', 'safe.directory', '*')
-    system('git', 'config', '--global', '--add', 'fetch.prune', 'true')
+    system('git', 'config', '--global', '--add', 'gc.auto', '0')
+    system('git', 'config', '--global', '--add', 'gc.autopacklimit', '0')
+    system('git', 'config', '--global', '--add', 'receive.autogc', 'false')
     system('git', 'config', '--global', '--add', 'fetch.parallel', '0')
     system('git', 'config', '--global', '--add', 'fetch.writeCommitGraph', 'true')
     system('git', 'config', '--global', '--add', 'fetch.negotiationAlgorithm', 'skipping')
