@@ -27,6 +27,7 @@ begin
     puts "\nBacking up #{repo[:full_name]}..."
 
     system('git', 'config', '--global', '--add', 'safe.directory', '*')
+    system('git', 'config', '--global', '--add', 'fetch.showForcedUpdates', 'false')
 
     if Dir.exist?(backup_path)
       Dir.chdir(backup_path) {
