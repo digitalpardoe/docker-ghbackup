@@ -28,11 +28,15 @@ begin
 
     system('git', 'config', '--global', '--add', 'safe.directory', '*')
     system('git', 'config', '--global', '--add', 'fetch.showForcedUpdates', 'false')
+    system('git', 'config', '--global', '--add', 'fetch.prune', 'true')
+    system('git', 'config', '--global', '--add', 'fetch.parallel', '0')
+    system('git', 'config', '--global', '--add', 'fetch.writeCommitGraph', 'true')
+    system('git', 'config', '--global', '--add', 'fetch.negotiationAlgorithm', 'skipping')
 
     if Dir.exist?(backup_path)
       Dir.chdir(backup_path) {
         system('git', 'remote', 'set-url', 'origin', authenitcated_clone_url)
-        system('git', 'remote', 'update')
+        system('git', 'fetch', '--all')
         system('git', 'lfs', 'fetch', '--all')
         system('git', 'remote', 'set-url', 'origin', unauthenticated_clone_url)
       }
